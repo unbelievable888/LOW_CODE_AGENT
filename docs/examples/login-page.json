@@ -1,0 +1,258 @@
+{
+  "version": "1.0.0",
+  "componentName": "Page",
+  "title": "登录页面",
+  "props": {
+    "style": {
+      "background": "#f5f5f5",
+      "minHeight": "100vh",
+      "display": "flex",
+      "justifyContent": "center",
+      "alignItems": "center"
+    }
+  },
+  "state": {
+    "loginForm": {
+      "username": "",
+      "password": "",
+      "remember": true
+    },
+    "loading": false,
+    "errorMessage": ""
+  },
+  "methods": {
+    "handleUsernameChange": {
+      "type": "function",
+      "args": ["value"],
+      "body": "this.state.loginForm.username = value;"
+    },
+    "handlePasswordChange": {
+      "type": "function",
+      "args": ["value"],
+      "body": "this.state.loginForm.password = value;"
+    },
+    "handleRememberChange": {
+      "type": "function",
+      "args": ["checked"],
+      "body": "this.state.loginForm.remember = checked;"
+    },
+    "handleSubmit": {
+      "type": "function",
+      "args": [],
+      "body": "this.dataSource.login.load();"
+    },
+    "handleLoginSuccess": {
+      "type": "function",
+      "args": ["res"],
+      "body": "this.state.loading = false; localStorage.setItem('token', res.token); window.location.href = '/dashboard';"
+    },
+    "handleLoginError": {
+      "type": "function",
+      "args": ["error"],
+      "body": "this.state.loading = false; this.state.errorMessage = error.message || '登录失败，请重试';"
+    }
+  },
+  "dataSource": {
+    "login": {
+      "type": "api",
+      "options": {
+        "url": "/api/login",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "data": {
+          "username": "{{state.loginForm.username}}",
+          "password": "{{state.loginForm.password}}",
+          "remember": "{{state.loginForm.remember}}"
+        }
+      },
+      "willFetch": {
+        "type": "function",
+        "args": [],
+        "body": "this.state.loading = true; this.state.errorMessage = '';"
+      },
+      "onSuccess": {
+        "type": "function",
+        "value": "handleLoginSuccess"
+      },
+      "onError": {
+        "type": "function",
+        "value": "handleLoginError"
+      }
+    }
+  },
+  "children": [
+    {
+      "componentName": "Card",
+      "props": {
+        "title": "用户登录",
+        "style": {
+          "width": "400px",
+          "boxShadow": "0 4px 8px rgba(0,0,0,0.1)"
+        }
+      },
+      "children": [
+        {
+          "componentName": "FormContainer",
+          "props": {
+            "name": "loginForm",
+            "layout": "vertical"
+          },
+          "children": [
+            {
+              "componentName": "FormItem",
+              "props": {
+                "label": "用户名",
+                "name": "username",
+                "rules": [
+                  {
+                    "required": true,
+                    "message": "请输入用户名"
+                  }
+                ]
+              },
+              "children": [
+                {
+                  "componentName": "Input",
+                  "props": {
+                    "placeholder": "请输入用户名",
+                    "prefix": "user",
+                    "size": "large",
+                    "allowClear": true
+                  },
+                  "events": {
+                    "onChange": {
+                      "type": "function",
+                      "value": "handleUsernameChange"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "componentName": "FormItem",
+              "props": {
+                "label": "密码",
+                "name": "password",
+                "rules": [
+                  {
+                    "required": true,
+                    "message": "请输入密码"
+                  }
+                ]
+              },
+              "children": [
+                {
+                  "componentName": "Input",
+                  "props": {
+                    "type": "password",
+                    "placeholder": "请输入密码",
+                    "prefix": "lock",
+                    "size": "large",
+                    "allowClear": true
+                  },
+                  "events": {
+                    "onChange": {
+                      "type": "function",
+                      "value": "handlePasswordChange"
+                    },
+                    "onPressEnter": {
+                      "type": "function",
+                      "value": "handleSubmit"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "componentName": "FormItem",
+              "props": {},
+              "children": [
+                {
+                  "componentName": "Checkbox",
+                  "props": {
+                    "checked": "{{state.loginForm.remember}}",
+                    "text": "记住我"
+                  },
+                  "events": {
+                    "onChange": {
+                      "type": "function",
+                      "value": "handleRememberChange"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "componentName": "FormItem",
+              "props": {},
+              "condition": "{{state.errorMessage !== ''}}",
+              "children": [
+                {
+                  "componentName": "Alert",
+                  "props": {
+                    "type": "error",
+                    "message": "{{state.errorMessage}}",
+                    "showIcon": true,
+                    "closable": true,
+                    "style": {
+                      "marginBottom": "16px"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "componentName": "FormItem",
+              "props": {},
+              "children": [
+                {
+                  "componentName": "Button",
+                  "props": {
+                    "text": "登录",
+                    "type": "primary",
+                    "size": "large",
+                    "loading": "{{state.loading}}",
+                    "block": true
+                  },
+                  "events": {
+                    "onClick": {
+                      "type": "function",
+                      "value": "handleSubmit"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "componentName": "Flex",
+              "props": {
+                "justify": "space-between",
+                "style": {
+                  "marginTop": "12px"
+                }
+              },
+              "children": [
+                {
+                  "componentName": "Link",
+                  "props": {
+                    "text": "立即注册",
+                    "href": "/register"
+                  }
+                },
+                {
+                  "componentName": "Link",
+                  "props": {
+                    "text": "忘记密码",
+                    "href": "/forgot-password"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

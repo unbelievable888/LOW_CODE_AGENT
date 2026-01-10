@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>低代码平台agent</title>
+    <style>
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+        h1 {
+            color: #1a73e8;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 28px;
+            font-weight: 600;
+            padding: 15px 0;
+            position: relative;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        h1:after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 3px;
+            background-color: #1a73e8;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+        .main-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .left-panel {
+            width: 45%;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: white;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+        .right-panel {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #fafafa;
+            position: relative;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        .container:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+        .query-form {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+        label {
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        textarea {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            min-height: 80px;
+            margin-bottom: 15px;
+            font-family: inherit;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+        }
+        input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        button {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0d47a1;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .result-container {
+            display: none;
+        }
+        .loading {
+            text-align: center;
+            display: none;
+            margin: 20px 0;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1a73e8;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .response {
+            background-color: #f1f8e9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            white-space: pre-wrap;
+        }
+        #sources-container {
+            background-color: #e8f5e9;
+        }
+        .source {
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        /* 低代码预览区样式 */
+        #lowcode-preview {
+            min-height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: white;
+            position: relative;
+        }
+        .loading-message {
+            color: #999;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        /* 低代码组件样式 */
+        .preview-page {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        .preview-card {
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .preview-card .card-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .preview-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .preview-form-item {
+            margin-bottom: 16px;
+            min-width: 200px;
+        }
+        .preview-form-item label {
+            display: block;
+            margin-bottom: 8px;
+        }
+        .preview-input, .preview-select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+        }
+        .preview-button {
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+        .preview-button-primary {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+        }
+        .preview-button-default {
+            background-color: white;
+            border: 1px solid #d9d9d9;
+        }
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .preview-table th, .preview-table td {
+            border: 1px solid #f0f0f0;
+            padding: 12px 8px;
+            text-align: left;
+        }
+        .preview-table th {
+            background-color: #fafafa;
+            font-weight: 500;
+        }
+        .preview-flex {
+            display: flex;
+        }
+        .preview-space-between {
+            justify-content: space-between;
+        }
+        .preview-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-right: 4px;
+        }
+        .preview-tag-green {
+            background-color: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+        }
+        .preview-tag-red {
+            background-color: #fff1f0;
+            border: 1px solid #ffa39e;
+            color: #f5222d;
+        }
+        .preview-tag-orange {
+            background-color: #fff7e6;
+            border: 1px solid #ffd591;
+            color: #fa8c16;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- 左侧面板: 搜索和结果 -->
+        <div class="left-panel">
+            <h1>低代码平台agent</h1>
+            
+            <div class="container">
+                <div class="query-form">
+                    <label for="query">输入设计需求:</label>
+                    <textarea id="query" placeholder="例如: 我需要一个搜索列表页面，请帮我设计"></textarea>
+                    
+                    <div class="controls">
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="include-sources" checked>
+                            <label for="include-sources">包含参考来源</label>
+                        </div>
+                        <button id="submit-btn">开始对话</button>
+                    </div>
+                </div>
+                
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>AI正在思考，请稍候...</p>
+                </div>
+                
+                <div class="error" id="error-message"></div>
+            </div>
+            
+            <div class="result-container" id="result-container">
+                <div class="container">
+                    <h2>对话结果</h2>
+                    <div class="response" id="response"></div>
+                </div>
+                
+                <div class="container" id="sources-container">
+                    <h3>参考来源</h3>
+                    <div id="sources-list"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右侧面板: 低代码页面渲染 -->
+        <div class="right-panel">
+            <div class="container">
+                <h2>低代码页面预览</h2>
+                <div id="lowcode-preview">
+                    <div class="loading-message">提交设计需求后将在此处显示页面预览</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const queryInput = document.getElementById('query');
+            const includeSourcesCheckbox = document.getElementById('include-sources');
+            const submitBtn = document.getElementById('submit-btn');
+            const loadingDiv = document.querySelector('.loading');
+            const resultContainer = document.getElementById('result-container');
+            const responseDiv = document.getElementById('response');
+            const sourcesContainer = document.getElementById('sources-container');
+            const sourcesList = document.getElementById('sources-list');
+            const errorMessage = document.getElementById('error-message');
+            
+            submitBtn.addEventListener('click', async function() {
+                const queryText = queryInput.value.trim();
+                if (!queryText) {
+                    showError('请输入您的设计需求');
+                    return;
+                }
+                
+                // 准备对话
+                const includeSources = includeSourcesCheckbox.checked;
+                submitBtn.disabled = true;
+                loadingDiv.style.display = 'block';
+                resultContainer.style.display = 'none';
+                errorMessage.style.display = 'none';
+                
+                try {
+                    const response = await fetch('/api/query', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            query: queryText,
+                            include_sources: includeSources
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        throw new Error(data.error || '对话处理失败');
+                    }
+                    
+                    // 显示响应
+                    responseDiv.textContent = data.response;
+                    
+                    // 显示来源（如果包含）
+                    if (includeSources && data.sources) {
+                        sourcesContainer.style.display = 'block';
+                        sourcesList.innerHTML = '';
+                        
+                        data.sources.forEach((source, index) => {
+                            const sourceElement = document.createElement('div');
+                            sourceElement.className = 'source';
+                            sourceElement.innerHTML = `<strong>来源 ${index + 1}:</strong><br>${source}`;
+                            sourcesList.appendChild(sourceElement);
+                        });
+                    } else {
+                        sourcesContainer.style.display = 'none';
+                    }
+                    
+                    resultContainer.style.display = 'block';
+                } catch (error) {
+                    showError(error.message || '对话处理时发生错误');
+                } finally {
+                    submitBtn.disabled = false;
+                    loadingDiv.style.display = 'none';
+                }
+            });
+            
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+            }
+            
+            // 处理响应文本，尝试提取低代码JSON并渲染
+            function processResponseForLowCode(responseText) {
+                const lowcodePreview = document.getElementById('lowcode-preview');
+                
+                // 尝试从响应中提取JSON
+                try {
+                    // 首先尝试找到JSON代码块
+                    const jsonMatch = responseText.match(/```(json|javascript)?\s*(\{[\s\S]*?\})\s*```/);
+                    
+                    if (jsonMatch && jsonMatch[2]) {
+                        const jsonStr = jsonMatch[2];
+                        const lowcodeData = JSON.parse(jsonStr);
+                        renderLowCodePreview(lowcodeData);
+                        return;
+                    }
+                    
+                    // 如果没有代码块，尝试直接解析整个响应
+                    const jsonStartIdx = responseText.indexOf('{');
+                    const jsonEndIdx = responseText.lastIndexOf('}');
+                    
+                    if (jsonStartIdx !== -1 && jsonEndIdx !== -1 && jsonEndIdx > jsonStartIdx) {
+                        const jsonStr = responseText.substring(jsonStartIdx, jsonEndIdx + 1);
+                        const lowcodeData = JSON.parse(jsonStr);
+                        renderLowCodePreview(lowcodeData);
+                        return;
+                    }
+                    
+                    // 如果无法提取JSON，显示提示信息
+                    lowcodePreview.innerHTML = `
+                        <div class="loading-message">
+                            未能从响应中提取有效的低代码JSON数据。<br>
+                            请确保查询结果包含有效的JSON代码。
+                        </div>
+                    `;
+                } catch (error) {
+                    console.error('解析或渲染低代码JSON时出错:', error);
+                    lowcodePreview.innerHTML = `
+                        <div class="loading-message">
+                            解析低代码JSON时发生错误。<br>
+                            错误信息: ${error.message}
+                        </div>
+                    `;
+                }
+            }
+            
+            // 渲染低代码预览
+            function renderLowCodePreview(lowcodeData) {
+                const previewContainer = document.getElementById('lowcode-preview');
+                
+                try {
+                    // 创建预览内容
+                    let html = '<div class="preview-page">';
+                    
+                    // 处理页面标题
+                    if (lowcodeData.title) {
+                        html += `<h1>${lowcodeData.title}</h1>`;
+                    }
+                    
+                    // 处理子组件
+                    if (lowcodeData.children && Array.isArray(lowcodeData.children)) {
+                        lowcodeData.children.forEach(child => {
+                            html += renderComponent(child);
+                        });
+                    }
+                    
+                    html += '</div>';
+                    previewContainer.innerHTML = html;
+                } catch (error) {
+                    console.error('渲染低代码预览时出错:', error);
+                    previewContainer.innerHTML = `
+                        <div class="loading-message">
+                            渲染预览时发生错误。<br>
+                            错误信息: ${error.message}
+                        </div>
+                    `;
+                }
+            }
+            
+            // 递归渲染组件
+            function renderComponent(component) {
+                if (!component || !component.componentName) {
+                    return '';
+                }
+                
+                let html = '';
+                const componentName = component.componentName;
+                const props = component.props || {};
+                
+                switch (componentName) {
+                    case 'Page':
+                        html += `<div class="preview-page" style="${renderStyle(props.style)}">`;
+                        if (component.children && Array.isArray(component.children)) {
+                            component.children.forEach(child => {
+                                html += renderComponent(child);
+                            });
+                        }
+                        html += '</div>';
+                        break;
+                        
+                    case 'Card':
+                        html += `<div class="preview-card" style="${renderStyle(props.style)}">`;
+                        if (props.title) {
+                            html += `<div class="card-title">${props.title}</div>`;
+                        }
+                        if (component.children && Array.isArray(component.children)) {
+                            component.children.forEach(child => {
+                                html += renderComponent(child);
+                            });
+                        }
+                        html += '</div>';
+                        break;
+                        
+                    case 'FormContainer':
+                        html += `<div class="preview-form" style="${renderStyle(props.style)}">`;
+                        if (component.children && Array.isArray(component.children)) {
+                            component.children.forEach(child => {
+                                html += renderComponent(child);
+                            });
+                        }
+                        html += '</div>';
+                        break;
+                        
+                    case 'FormItem':
+                        html += `<div class="preview-form-item">`;
+                        if (props.label) {
+                            html += `<label>${props.label}</label>`;
+                        }
+                        if (component.children && Array.isArray(component.children)) {
+                            component.children.forEach(child => {
+                                html += renderComponent(child);
+                            });
+                        }
+                        html += '</div>';
+                        break;
+                        
+                    case 'Input':
+                        html += `<input type="text" class="preview-input" placeholder="${props.placeholder || ''}" ${props.disabled ? 'disabled' : ''}>`;
+                        break;
+                        
+                    case 'Select':
+                        html += `<select class="preview-select" ${props.disabled ? 'disabled' : ''}>`;
+                        html += `<option value="">${props.placeholder || '请选择'}</option>`;
+                        if (props.options && Array.isArray(props.options)) {
+                            props.options.forEach(option => {
+                                html += `<option value="${option.value}">${option.label}</option>`;
+                            });
+                        }
+                        html += '</select>';
+                        break;
+                        
+                    case 'Button':
+                        const btnType = props.type || 'default';
+                        html += `<button class="preview-button preview-button-${btnType}">${props.text || '按钮'}</button>`;
+                        break;
+                        
+                    case 'Table':
+                        html += `<table class="preview-table">`;
+                        // 表头
+                        if (props.columns && Array.isArray(props.columns)) {
+                            html += '<thead><tr>';
+                            props.columns.forEach(col => {
+                                html += `<th>${col.title}</th>`;
+                            });
+                            html += '</tr></thead>';
+                        }
+                        // 表体
+                        html += '<tbody>';
+                        if (props.dataSource && Array.isArray(props.dataSource) && props.dataSource.length > 0) {
+                            props.dataSource.forEach(row => {
+                                html += '<tr>';
+                                props.columns.forEach(col => {
+                                    html += `<td>${row[col.dataIndex] || ''}</td>`;
+                                });
+                                html += '</tr>';
+                            });
+                        } else {
+                            html += '<tr><td colspan="100%" style="text-align:center">暂无数据</td></tr>';
+                        }
+                        html += '</tbody></table>';
+                        break;
+                        
+                    case 'Flex':
+                        const justifyClass = props.justify ? `preview-${props.justify}` : '';
+                        html += `<div class="preview-flex ${justifyClass}" style="${renderStyle(props.style)}">`;
+                        if (component.children && Array.isArray(component.children)) {
+                            component.children.forEach(child => {
+                                html += renderComponent(child);
+                            });
+                        }
+                        html += '</div>';
+                        break;
+                        
+                    case 'Space':
+                        html += `<div class="preview-flex" style="gap:8px; ${renderStyle(props.style)}">`;
+                        if (component.children && Array.isArray(component.children)) {
+                            component.children.forEach(child => {
+                                html += renderComponent(child);
+                            });
+                        }
+                        html += '</div>';
+                        break;
+                        
+                    case 'Divider':
+                        if (props.type === 'vertical') {
+                            html += `<div style="display:inline-block;width:1px;height:1em;margin:0 8px;background-color:#ddd;vertical-align:middle;"></div>`;
+                        } else {
+                            html += `<div style="height:1px;background-color:#ddd;margin:16px 0;"></div>`;
+                        }
+                        break;
+                        
+                    default:
+                        html += `<div>${componentName}</div>`;
+                }
+                
+                return html;
+            }
+            
+            // 渲染样式对象为内联样式字符串
+            function renderStyle(styleObj) {
+                if (!styleObj || typeof styleObj !== 'object') {
+                    return '';
+                }
+                
+                let styleStr = '';
+                for (const key in styleObj) {
+                    if (Object.prototype.hasOwnProperty.call(styleObj, key)) {
+                        // 转换驼峰为连字符
+                        const cssKey = key.replace(/([A-Z])/g, "-$1").toLowerCase();
+                        styleStr += `${cssKey}: ${styleObj[key]}; `;
+                    }
+                }
+                
+                return styleStr;
+            }
+            
+            // 当查询结果显示时，处理响应文本并尝试渲染低代码预览
+            const responseObserver = new MutationObserver((mutations) => {
+                mutations.forEach(mutation => {
+                    if (mutation.type === 'childList' && mutation.target.id === 'response') {
+                        const responseText = mutation.target.textContent;
+                        if (responseText) {
+                            processResponseForLowCode(responseText);
+                        }
+                    }
+                });
+            });
+            
+            // 开始观察响应区域的变化
+            responseObserver.observe(responseDiv, { childList: true });
+        });
+    </script>
+</body>
+</html>
