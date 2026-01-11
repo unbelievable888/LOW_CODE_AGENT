@@ -1,23 +1,44 @@
-# LOW_CODE_AGENT# 低代码平台 服务端
+# 低代码平台 (LOW_CODE_AGENT)
 
-本目录包含低代码平台Agent服务端实现
+## 项目介绍
+
+低代码平台是一个智能化开发工具，旨在通过RAG (检索增强生成) 技术提供智能组件推荐、代码生成和文档检索功能，帮助开发者更高效地构建应用程序。系统利用向量数据库存储和检索文档信息，通过大语言模型生成上下文相关的高质量回答。
 
 ## 目录结构
 
-- `rag_langchain/`: 基于LangChain实现的RAG (检索增强生成) 系统
-  - `rag_processor.py`: RAG核心处理逻辑
-  - `requirements.txt`: LangChain版本的依赖项列表
-- `rag_native/`: 原生实现的RAG系统（不依赖LangChain）
-  - `rag_processor.py`: 原生RAG处理逻辑
-  - `requirements.txt`: 原生版本的依赖项列表
-- `templates/`: Web服务的前端模板
-  - `index.html`: RAG查询的Web界面
-- `rag_web_service.py`: RAG Web服务入口
-- `requirements.txt`: 主要依赖项列表（包含Web服务和RAG所需的所有依赖）
+```
+LOW_CODE_AGENT/
+├── docs/                     # 文档和知识库
+│   ├── components/           # 组件文档
+│   ├── examples/             # 示例文档
+│   └── schemas/              # 模式定义
+├── server/                   # 服务端代码
+│   ├── rag_langchain/        # 基于LangChain实现的RAG系统
+│   │   ├── rag_processor.py  # RAG核心处理逻辑
+│   │   ├── requirements.txt  # 依赖项列表
+│   │   └── vector_db/        # 向量数据库存储目录
+│   ├── rag_native/           # 原生实现的RAG系统
+│   │   ├── rag_processor.py  # 原生RAG处理逻辑
+│   │   ├── requirements.txt  # 依赖项列表
+│   │   └── vector_db/        # 向量数据库存储目录
+│   ├── templates/            # Web服务的前端模板
+│   │   └── index.html        # RAG查询的Web界面
+│   ├── config.template.py    # API配置模板
+│   ├── rag_web_service.py    # RAG Web服务入口
+│   └── requirements.txt      # 主要依赖项列表
+└── .gitignore                # Git忽略文件配置
+```
 
-## 运行方式
+## 快速开始
 
-### 安装依赖
+### 1. 克隆项目
+
+```bash
+git clone https://github.com/yourname/LOW_CODE_AGENT.git
+cd LOW_CODE_AGENT
+```
+
+### 2. 安装依赖
 
 安装所有依赖（包含Web服务和RAG所需的全部依赖）：
 
@@ -26,23 +47,7 @@ cd server
 pip3 install -r requirements.txt
 ```
 
-### 运行RAG演示（命令行方式）
-
-#### LangChain版本
-
-```bash
-cd server
-python3 rag_langchain/rag_processor.py
-```
-
-#### 原生版本（性能较高但内存要求更高）
-
-```bash
-cd server
-python3 rag_native/rag_processor.py
-```
-
-### 配置API密钥
+### 3. 配置API密钥
 
 RAG系统需要配置OpenAI API密钥才能正常工作。有两种方式可以提供API密钥：
 
@@ -69,8 +74,24 @@ RAG系统需要配置OpenAI API密钥才能正常工作。有两种方式可以�
 
 **注意**: 切勿将包含真实API密钥的配置文件提交到版本控制系统中。建议将`config.py`添加到`.gitignore`文件中。
 
-### 运行RAG Web服务
+### 4. 运行RAG演示（命令行方式）
 
+#### LangChain版本
+
+```bash
+cd server
+python3 rag_langchain/rag_processor.py
+```
+
+#### 原生版本（性能较高但内存要求更高）
+
+```bash
+cd server
+python3 rag_native/rag_processor.py
+```
+
+
+### 5. 运行RAG Web服务
 
 1. **启动Web服务**:
 
@@ -105,3 +126,12 @@ Web服务提供以下API端点：
 }
 ```
 
+## 向量数据库
+
+系统在首次运行时会自动初始化向量数据库：
+
+1. **初始化过程**: 系统会自动加载`docs`目录下的文档，进行切分和向量化，存储到向量数据库中
+2. **存储位置**: 向量数据库文件存储在`server/rag_langchain/vector_db/`或`server/rag_native/vector_db/`目录下
+3. **重建向量库**: 如果文档更新，可以通过设置`rebuild_vectorstore=True`参数重建向量库
+
+**注意**: 请确保不要提交包含敏感信息的文件，如`config.py`。
