@@ -2,7 +2,7 @@
 
 ## 项目介绍
 
-低代码平台是一个智能化开发工具，旨在通过RAG (检索增强生成) 技术提供智能组件推荐、代码生成和文档检索功能，帮助开发者更高效地构建应用程序。系统利用向量数据库存储和检索文档信息，通过大语言模型生成上下文相关的高质量回答。
+低代码平台是一个智能化开发工具，旨在通过RAG (检索增强生成) 技术提供智能组件推荐、代码生成和文档检索功能，帮助开发者更高效地构建应用程序。系统利用向量数据库存储和检索文档信息，通过大语言模型生成上下文相关的高质量回答。系统还集成了知识图谱功能，提供更加结构化和关联性强的检索结果。
 
 ## 目录结构
 
@@ -21,6 +21,11 @@ LOW_CODE_AGENT/
 │   │   ├── rag_processor.py  # 原生RAG处理逻辑
 │   │   ├── requirements.txt  # 依赖项列表
 │   │   └── vector_db/        # 向量数据库存储目录
+│   ├── rag_konwledge_graph/  # 基于知识图谱的RAG系统
+│   │   ├── rag_processor.py  # 知识图谱RAG处理逻辑
+│   │   ├── requirements.txt  # 依赖项列表
+│   │   ├── vector_db/        # 向量数据库存储目录
+│   │   └── knowledge_graph/  # 知识图谱存储目录
 │   ├── templates/            # Web服务的前端模板
 │   │   └── index.html        # RAG查询的Web界面
 │   ├── config.template.py    # API配置模板
@@ -90,6 +95,13 @@ cd server
 python3 rag_native/rag_processor.py
 ```
 
+#### 知识图谱版本（结合向量检索和知识图谱）
+
+```bash
+cd server
+python3 rag_konwledge_graph/rag_processor.py
+```
+
 
 ### 5. 运行RAG Web服务
 
@@ -126,12 +138,14 @@ Web服务提供以下API端点：
 }
 ```
 
-## 向量数据库
+## 向量数据库与知识图谱
 
-系统在首次运行时会自动初始化向量数据库：
+系统在首次运行时会自动初始化向量数据库和知识图谱：
 
 1. **初始化过程**: 系统会自动加载`docs`目录下的文档，进行切分和向量化，存储到向量数据库中
-2. **存储位置**: 向量数据库文件存储在`server/rag_langchain/vector_db/`或`server/rag_native/vector_db/`目录下
-3. **重建向量库**: 如果文档更新，可以通过设置`rebuild_vectorstore=True`参数重建向量库
+2. **存储位置**: 
+   - 向量数据库文件存储在`server/rag_langchain/vector_db/`、`server/rag_native/vector_db/`或`server/rag_konwledge_graph/vector_db/`目录下
+   - 知识图谱存储在`server/rag_konwledge_graph/knowledge_graph/`目录下
+3. **重建向量库**: 如果文档更新，可以通过设置`rebuild=True`参数重建向量库和知识图谱
 
 **注意**: 请确保不要提交包含敏感信息的文件，如`config.py`。

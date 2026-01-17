@@ -37,10 +37,8 @@ env/
 .DS_Store
 
 # 向量数据库相关
-server/rag_langchain/vector_db/*
-!server/rag_langchain/vector_db/.gitkeep
-server/rag_native/vector_db/*
-!server/rag_native/vector_db/.gitkeep
+server/*/vector_db/*
+server/rag_konwledge_graph/knowledge_graph/*
 
 # 日志文件
 *.log
@@ -49,3 +47,5 @@ server/rag_native/vector_db/*
 .pytest_cache/
 .coverage
 htmlcov/
+
+

@@ -9,6 +9,7 @@ from pathlib import Path
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from rag_langchain.rag_processor import LowCodeRAGProcessor, RAGConfig
+from rag_konwledge_graph.rag_processor import KnowledgeGraphRAGProcessor
 
 # 尝试导入配置文件
 try:
@@ -51,7 +52,7 @@ def init_rag_processor():
         # 使用脚本的绝对路径来确定docs和vector_db路径
         script_dir = Path(__file__).resolve().parent
         docs_path = script_dir.parent / "docs"
-        vector_db_path = script_dir / "rag_langchain" / "vector_db"
+        vector_db_path = script_dir / "rag_konwledge_graph" / "vector_db"
         
         print(f"文档路径: {docs_path}")
         print(f"向量数据库路径: {vector_db_path}")
@@ -67,15 +68,23 @@ def init_rag_processor():
         )
         
         # 初始化处理器
-        rag_processor = LowCodeRAGProcessor(config)
+        rag_processor = KnowledgeGraphRAGProcessor(api_key=OPENAI_API_KEY)
+        
+        # 获取文档路径列表
+        file_paths = []
+        for root, _, files in os.walk(docs_path):
+            for file in files:
+                if file.endswith(".md"):
+                    file_paths.append(os.path.join(root, file))
         
         # 设置（尝试加载现有向量库，如果不存在则创建）
         try:
-            rag_processor.setup(rebuild_vectorstore=False, openai_api_key=OPENAI_API_KEY)
+            # 始终传递file_paths，以防加载失败时需要重建
+            rag_processor.setup(file_paths=file_paths, rebuild=False)
             print("成功加载现有向量库")
         except Exception as e:
             print(f"加载向量库失败，尝试重建: {str(e)}")
-            rag_processor.setup(rebuild_vectorstore=True, openai_api_key=OPENAI_API_KEY)
+            rag_processor.setup(file_paths=file_paths, rebuild=True)
             print("成功重建向量库")
     
     except Exception as e:
@@ -183,4 +192,4 @@ if __name__ == "__main__":
         print(f"RAG处理器初始化失败: {str(e)}")
     
     # 启动Flask应用
-    app.run(debug=DEBUG, host='0.0.0.0')
+    app.run(debug=DEBUG, host='0.0.0.0', port=5001)
